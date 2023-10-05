@@ -25,8 +25,6 @@
 
 namespace block_xp\local\iterator;
 
-defined('MOODLE_INTERNAL') || die();
-
 use ArrayIterator;
 use IteratorIterator;
 use Traversable;
@@ -57,6 +55,8 @@ class map_iterator extends IteratorIterator {
         $this->callback = $callback;
     }
 
+    // @codingStandardsIgnoreLine.
+    #[\ReturnTypeWillChange]
     /**
      * Returns the current element.
      *

@@ -27,8 +27,6 @@
 
 namespace block_xp\local\iterator;
 
-defined('MOODLE_INTERNAL') || die();
-
 use moodle_recordset;
 use NoRewindIterator;
 
@@ -65,6 +63,8 @@ class map_recordset extends NoRewindIterator {
         $this->getInnerIterator()->close();
     }
 
+    // @codingStandardsIgnoreLine.
+    #[\ReturnTypeWillChange]
     /**
      * Returns the current element.
      *
@@ -85,7 +85,7 @@ class map_recordset extends NoRewindIterator {
      *
      * @return bool
      */
-    public function valid() {
+    public function valid(): bool {
         $valid = parent::valid();
         if (!$valid) {
             $this->getInnerIterator()->close();

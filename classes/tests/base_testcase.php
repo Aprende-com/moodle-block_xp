@@ -22,9 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
+namespace block_xp\tests;
 
 /**
  * Base testcase class.
@@ -33,11 +31,15 @@ global $CFG;
  * @copyright  2014 Frédéric Massart - FMCorz.net
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class block_xp_base_testcase extends advanced_testcase {
+abstract class base_testcase extends \advanced_testcase {
 
     public function setUp(): void {
         $this->resetAfterTest();
         $this->reset_container();
+    }
+
+    protected function get_world($courseid) {
+        return \block_xp\di::get('course_world_factory')->get_world($courseid);
     }
 
     protected function reset_container() {

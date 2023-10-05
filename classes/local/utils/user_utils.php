@@ -24,7 +24,6 @@
  */
 
 namespace block_xp\local\utils;
-defined('MOODLE_INTERNAL') || die();
 
 use block_xp\di;
 use context_course;
@@ -57,7 +56,7 @@ class user_utils {
      *
      * @param int $courseid The course ID.
      * @param int $userid The user ID.
-     * @param int The group ID, or 0.
+     * @return int
      */
     public static function get_primary_group_id($courseid, $userid) {
         $course = get_fast_modinfo($courseid)->get_course();
@@ -114,7 +113,7 @@ class user_utils {
      *
      * The "picture fields" contain everything we need to display a
      * user's full name and its avatar. To extract these from a SQL
-     * result, refer to {@link self::unalias_picture_fields()}.
+     * result, refer to {@see self::unalias_picture_fields()}.
      *
      * @param string $tableprefix Name of the database prefix, without the '.'.
      * @param string $idalias The alias for the user ID field.
