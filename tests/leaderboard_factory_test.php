@@ -41,12 +41,12 @@ use block_xp\tests\base_testcase;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \block_xp\local\factory\default_course_world_leaderboard_factory
  */
-class leaderboard_factory_test extends base_testcase {
+final class leaderboard_factory_test extends base_testcase {
 
     /**
      * Test the plain factory.
      */
-    public function test_plain_factory_without_groups() {
+    public function test_plain_factory_without_groups(): void {
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
 
@@ -186,7 +186,7 @@ class leaderboard_factory_test extends base_testcase {
     /**
      * Test the with_config factory.
      */
-    public function test_factory_with_config_without_groups() {
+    public function test_factory_with_config_without_groups(): void {
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
 
@@ -230,8 +230,8 @@ class leaderboard_factory_test extends base_testcase {
 
         // Without a rank.
         $config = new config_stack([new static_config([
-            'rankmode' => course_world_config::RANK_OFF
-        ]), $world->get_config()]);
+            'rankmode' => course_world_config::RANK_OFF,
+        ]), $world->get_config(), ]);
         $lb = $factory->get_course_leaderboard_with_config($world, $config);
         $this->assert_ranking($lb->get_ranking(new limit(0, 0)), [
             [$u8, 0],
@@ -247,8 +247,8 @@ class leaderboard_factory_test extends base_testcase {
         // With a relative rank for u8.
         $this->setUser($u8);
         $config = new config_stack([new static_config([
-            'rankmode' => course_world_config::RANK_REL
-        ]), $world->get_config()]);
+            'rankmode' => course_world_config::RANK_REL,
+        ]), $world->get_config(), ]);
         $lb = $factory->get_course_leaderboard_with_config($world, $config);
         $this->assert_ranking($lb->get_ranking(new limit(0, 0)), [
             [$u8, 0],
@@ -264,8 +264,8 @@ class leaderboard_factory_test extends base_testcase {
         // With a relative rank for u2.
         $this->setUser($u2);
         $config = new config_stack([new static_config([
-            'rankmode' => course_world_config::RANK_REL
-        ]), $world->get_config()]);
+            'rankmode' => course_world_config::RANK_REL,
+        ]), $world->get_config(), ]);
         $lb = $factory->get_course_leaderboard_with_config($world, $config);
         $this->assert_ranking($lb->get_ranking(new limit(0, 0)), [
             [$u8, 60],
@@ -282,8 +282,8 @@ class leaderboard_factory_test extends base_testcase {
         $this->setUser($u2);
         $config = new config_stack([new static_config([
             'neighbours' => 1,
-            'rankmode' => course_world_config::RANK_REL
-        ]), $world->get_config()]);
+            'rankmode' => course_world_config::RANK_REL,
+        ]), $world->get_config(), ]);
         $lb = $factory->get_course_leaderboard_with_config($world, $config);
         $this->assert_ranking($lb->get_ranking(new limit(0, 0)), [
             [$u3, 10],
@@ -306,7 +306,7 @@ class leaderboard_factory_test extends base_testcase {
             'neighbours' => 3,
             'rankmode' => course_world_config::RANK_REL,
             'identitymode' => course_world_config::IDENTITY_OFF,
-        ]), $world->get_config()]);
+        ]), $world->get_config(), ]);
         $lb = $factory->get_course_leaderboard_with_config($world, $config);
         $ranking = array_values(iterator_to_array($lb->get_ranking(new limit(0, 0))));
         $this->assertEquals(30, $ranking[0]->get_rank());
@@ -332,6 +332,12 @@ class leaderboard_factory_test extends base_testcase {
         $this->assertEquals($guestuser->id, $ranking[6]->get_state()->get_id());
     }
 
+    /**
+     * Assert the ranking.
+     *
+     * @param local\xp\rank[] $ranking The ranking.
+     * @param array $expected
+     */
     protected function assert_ranking($ranking, array $expected) {
         $i = 0;
         foreach ($ranking as $rank) {

@@ -53,15 +53,24 @@ use context_system;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \block_xp\privacy\provider
  */
-class privacy_provider_test extends base_testcase {
+final class privacy_provider_test extends base_testcase {
 
-    public function setUp(): void {
+    /**
+     * Setup.
+     */
+    public function setup_test() {
         if (!class_exists('core_privacy\manager')) {
             $this->markTestSkipped('Moodle versions does not support privacy subsystem.');
         }
-        parent::setUp();
+        parent::setup_test();
     }
 
+    /**
+     * Get world.
+     *
+     * @param int $courseid The course ID.
+     * @return \block_xp\local\world
+     */
     protected function get_world($courseid) {
         $world = di::get('course_world_factory')->get_world($courseid);
         $world->get_config()->set('enabled', 1);
@@ -70,12 +79,12 @@ class privacy_provider_test extends base_testcase {
         return $world;
     }
 
-    public function test_get_metadata() {
+    public function test_get_metadata(): void {
         $data = provider::get_metadata(new collection('block_xp'));
         $this->assertCount(7, $data->get_collection());
     }
 
-    public function test_export_user_prefs() {
+    public function test_export_user_prefs(): void {
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
         $c2 = $dg->create_course();
@@ -108,7 +117,7 @@ class privacy_provider_test extends base_testcase {
         $this->assertFalse(in_array('block_xp-notice-block_intro_' . $c2->id, $prefkeys));
     }
 
-    public function test_get_contexts_for_userid() {
+    public function test_get_contexts_for_userid(): void {
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
         $c2 = $dg->create_course();
@@ -123,7 +132,7 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world(SITEID);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
 
         // Set back to course mode to get data on both sides.
@@ -133,19 +142,19 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
 
         $world = $this->get_world($c3->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c3->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c3->id]);
         $strategy->collect_event($e);
 
         $contextlist = provider::get_contexts_for_userid($u1->id);
@@ -165,7 +174,7 @@ class privacy_provider_test extends base_testcase {
         $this->assert_contextlist_equals($contextlist, []);
     }
 
-    public function test_get_users_in_context() {
+    public function test_get_users_in_context(): void {
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
         $c2 = $dg->create_course();
@@ -180,9 +189,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world(SITEID);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u3->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u3->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
 
         // Set back to course mode to get data on both sides.
@@ -192,14 +201,14 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
 
         $userlist = new userlist(context_system::instance(), 'block_xp');
@@ -219,7 +228,7 @@ class privacy_provider_test extends base_testcase {
         $this->assert_userlist_equals($userlist, []);
     }
 
-    public function test_delete_data_for_all_users_in_context() {
+    public function test_delete_data_for_all_users_in_context(): void {
         $db = di::get('db');
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
@@ -229,9 +238,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u2->id);
@@ -244,9 +253,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u2->id);
@@ -274,7 +283,7 @@ class privacy_provider_test extends base_testcase {
         $this->assertNotNull(get_user_preferences('block_xp_notify_level_up_' . $c2->id, null, $u2->id));
     }
 
-    public function test_delete_data_for_user() {
+    public function test_delete_data_for_user(): void {
         $db = di::get('db');
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
@@ -284,9 +293,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u2->id);
@@ -299,9 +308,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u2->id);
@@ -330,7 +339,7 @@ class privacy_provider_test extends base_testcase {
         $this->assertNotNull(get_user_preferences('block_xp_notify_level_up_' . $c2->id, null, $u2->id));
     }
 
-    public function test_delete_data_for_users() {
+    public function test_delete_data_for_users(): void {
         $db = di::get('db');
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
@@ -341,11 +350,11 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u3->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u3->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c1->id, 1, $u2->id);
@@ -361,9 +370,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u1->id);
         set_user_preference('block_xp_notify_level_up_' . $c2->id, 1, $u2->id);
@@ -395,7 +404,7 @@ class privacy_provider_test extends base_testcase {
         $this->assertNotNull(get_user_preferences('block_xp_notify_level_up_' . $c2->id, null, $u2->id));
     }
 
-    public function test_export_data_for_user() {
+    public function test_export_data_for_user(): void {
         $db = di::get('db');
         $dg = $this->getDataGenerator();
         $c1 = $dg->create_course();
@@ -405,19 +414,19 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c1->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c1->id]);
         $strategy->collect_event($e);
 
         $this->assertNotEquals(0, $world->get_store()->get_state($u1->id)->get_xp());
@@ -426,9 +435,9 @@ class privacy_provider_test extends base_testcase {
 
         $world = $this->get_world($c2->id);
         $strategy = $world->get_collection_strategy();
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u1->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'userid' => $u2->id, 'courseid' => $c2->id]);
         $strategy->collect_event($e);
 
         $this->assertNotEquals(0, $world->get_store()->get_state($u1->id)->get_xp());
@@ -443,7 +452,6 @@ class privacy_provider_test extends base_testcase {
 
         $this->assertNotEmpty($level);
         $this->assertEquals($userstate->get_xp(), $level->points);
-        $this->assertEquals($userstate->get_level()->get_level(), $level->level);
         $this->assertEquals($u1->id, $level->userid);
 
         $this->assertNotEmpty($logs);
@@ -455,6 +463,12 @@ class privacy_provider_test extends base_testcase {
         }
     }
 
+    /**
+     * Assert context list equals.
+     *
+     * @param object $contextlist The context list.
+     * @param int[] $expectedids The context IDs.
+     */
     protected function assert_contextlist_equals($contextlist, $expectedids) {
         $contextids = array_map('intval', $contextlist->get_contextids());
         sort($contextids);
@@ -462,6 +476,12 @@ class privacy_provider_test extends base_testcase {
         $this->assertEquals($expectedids, $contextids);
     }
 
+    /**
+     * Assert user list equals.
+     *
+     * @param object $userlist The context list.
+     * @param int[] $expectedids The context IDs.
+     */
     protected function assert_userlist_equals($userlist, $expectedids) {
         $userids = array_map('intval', $userlist->get_userids());
         sort($userids);

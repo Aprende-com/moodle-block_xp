@@ -1,6 +1,81 @@
 Changelog
 =========
 
+v3.16.0
+-------
+
+New features
+
+- Admins can reset the levels of all courses to the default values
+- Admins can reset the appearance of the levels in all courses to the defaults
+- Massive invisible underground work to support future major improvements
+
+Quality of life
+
+- Renamed "For the whole site" to "Sitewide"
+- Level up notification popup can be previewed from the levels page
+- Dangerous actions are coloured accordingly
+
+Bug fixes
+
+- Mitigated rare issue with tooltips on some themes
+- Other minor fixes and improvements
+
+Technical changes
+
+- Compatibility with Moodle 4.4
+- Raised minimum required version to Moodle 3.11
+
+Read our [release blog post](https://www.levelup.plus/blog/xp-release-3-16/) to learn more.
+
+v3.15.2
+-------
+
+Technical changes
+
+- Improved compatibility with PHP 8.2
+- Addressing false positive in automated tests
+
+v3.15.1
+-------
+
+Bug fixes
+
+- Levels incorrectly started at 2 when restored from pre 3.15.0 backup
+
+v3.15.0
+-------
+
+New features
+
+- The user level badge can be displayed in the top navigation bar
+- The level up notification animated the transition to the new level
+- Redesign the levels customisation page to simplify setting their points
+- Points shortcode can display the number of points of the current user
+- Admin setting allow admin users to collect points like other users
+
+Quality of life
+
+- Warn admins when they are editing the default settings in site-wide mode
+- The levels can be reset to the admin defaults from the levels page
+- The levels appearance can be reset to the admin defaults from the appearance page
+- Improved the design of several pages
+- Display compatibility checks in the admin general settings page
+- Renamed "Visuals" to "Appearance"
+
+Bug fixes
+
+- Fixed JavaScript error when trying to dismiss notice to managers
+- The level up event could incorrectly trigger when editing user points
+- Other minor fixes and improvements
+
+Technical changes
+
+- Compatibility with Moodle 4.3
+- Plugin declare which Moodle versions are explicitly supported
+
+Read our [release blog post](https://www.levelup.plus/blog/xp-release-3-15/) to learn more.
+
 v3.14.1
 -------
 

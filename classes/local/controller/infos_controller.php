@@ -44,8 +44,11 @@ use block_xp\local\routing\url;
  */
 class infos_controller extends page_controller {
 
+    /** @var bool */
     protected $requiremanage = false;
+    /** @var string */
     protected $routename = 'infos';
+    /** @var object */
     protected $form;
 
     protected function permissions_checks() {
@@ -57,7 +60,7 @@ class infos_controller extends page_controller {
 
     protected function define_optional_params() {
         return [
-            ['edit', false, PARAM_BOOL, true]
+            ['edit', false, PARAM_BOOL, true],
         ];
     }
 
@@ -106,8 +109,8 @@ class infos_controller extends page_controller {
             $form = $this->get_form();
             $form->set_data((object) ['instructions' => [
                 'text' => $instructions,
-                'format' => $instructionsformat
-            ]]);
+                'format' => $instructionsformat,
+            ], ]);
             $form->display();
 
         } else if ($hasinstructions) {

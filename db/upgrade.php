@@ -97,7 +97,7 @@ function xmldb_block_xp_upgrade($oldversion) {
 
         // Define index courseid (unique) to be added to block_xp_config.
         $table = new xmldb_table('block_xp_config');
-        $index = new xmldb_index('courseid', XMLDB_INDEX_UNIQUE, array('courseid'));
+        $index = new xmldb_index('courseid', XMLDB_INDEX_UNIQUE, ['courseid']);
 
         // Conditionally launch add index courseid.
         if (!$dbman->index_exists($table, $index)) {
@@ -136,10 +136,10 @@ function xmldb_block_xp_upgrade($oldversion) {
         $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
 
         // Adding keys to table block_xp_filters.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Adding indexes to table block_xp_filters.
-        $table->add_index('courseid', XMLDB_INDEX_NOTUNIQUE, array('courseid'));
+        $table->add_index('courseid', XMLDB_INDEX_NOTUNIQUE, ['courseid']);
 
         // Conditionally launch create table for block_xp_filters.
         if (!$dbman->table_exists($table)) {
@@ -213,7 +213,7 @@ function xmldb_block_xp_upgrade($oldversion) {
     if ($oldversion < 2016021500) {
 
         // We changed the way the "Level up" notifications are triggered, so we'll remove the old flags from the database.
-        $DB->delete_records('user_preferences', array('name' => 'block_xp_notify_level_up'));
+        $DB->delete_records('user_preferences', ['name' => 'block_xp_notify_level_up']);
 
         // Xp savepoint reached.
         upgrade_block_savepoint(true, 2016021500, 'xp');
@@ -550,6 +550,49 @@ function xmldb_block_xp_upgrade($oldversion) {
 
         // Xp savepoint reached.
         upgrade_block_savepoint(true, 2022090112, 'xp');
+    }
+
+    if ($oldversion < 2023080702) {
+
+        // The lvl column is deprecated, but kept to avoid breaking external integrations.
+        // Nevertheless, all values are set to the default of 1 to avoid confusion with mixed data.
+        $DB->set_field('block_xp', 'lvl', 1, []);
+
+        // Xp savepoint reached.
+        upgrade_block_savepoint(true, 2023080702, 'xp');
+    }
+
+    if ($oldversion < 2024040211) {
+
+        // Define table block_xp_rule to be created.
+        $table = new xmldb_table('block_xp_rule');
+
+        // Adding fields to table block_xp_rule.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('childcontextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('points', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('type', XMLDB_TYPE_CHAR, '32', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('filter', XMLDB_TYPE_CHAR, '32', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('filtercourseid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('filtercmid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('filterint1', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('filterchar1', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+
+        // Adding keys to table block_xp_rule.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('contextid', XMLDB_KEY_FOREIGN, ['contextid'], 'context', ['id']);
+
+        // Adding indexes to table block_xp_rule.
+        $table->add_index('contextids', XMLDB_INDEX_NOTUNIQUE, ['contextid', 'childcontextid']);
+
+        // Conditionally launch create table for block_xp_rule.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Xp savepoint reached.
+        upgrade_block_savepoint(true, 2024040211, 'xp');
     }
 
     return true;

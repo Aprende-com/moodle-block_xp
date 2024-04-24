@@ -168,13 +168,45 @@ class course_filter_manager {
      */
     public function get_user_filters($category = \block_xp_filter::CATEGORY_EVENTS) {
         $results = $this->db->get_recordset('block_xp_filters', ['courseid' => $this->courseid,
-            'category' => $category], 'sortorder ASC, id ASC');
-        $filters = array();
+            'category' => $category, ], 'sortorder ASC, id ASC');
+        $filters = [];
         foreach ($results as $key => $filter) {
             $filters[$filter->id] = \block_xp_filter::load_from_data($filter);
         }
         $results->close();
         return $filters;
+    }
+
+    /**
+     * Loosely check if any filter contain any rule.
+     *
+     * @param string[] $ruleclasses The class names.
+     * @param int $category The category constant.
+     * @return bool
+     */
+    public function has_filters_using_rules($ruleclasses, $category = \block_xp_filter::CATEGORY_EVENTS) {
+        if (empty($ruleclasses)) {
+            return false;
+        }
+
+        $params = [];
+        $segments = [];
+        foreach ($ruleclasses as $i => $ruleclass) {
+            $key = 'ruleclass' . $i;
+            $searchfor = '"_class":"' . $ruleclass . '"';
+            $params = array_merge($params, [
+                $key => '%' . $this->db->sql_like_escape(str_replace('\\', '\\\\', $searchfor), '@') . '%',
+            ]);
+            $segments[] = $this->db->sql_like('ruledata', ':' . $key, false, false, false, '@');
+        }
+
+        $sql = 'courseid = :courseid AND category = :category AND (' . implode(' OR ', $segments) . ')';
+        $params = array_merge($params, [
+            'courseid' => $this->courseid,
+            'category' => $category,
+        ]);
+
+        return $this->db->record_exists_select('block_xp_filters', $sql, $params);
     }
 
     /**
@@ -201,16 +233,20 @@ class course_filter_manager {
     /**
      * Import the default filters.
      *
+     * @param int|null $category The category.
      * @return void
      */
-    public function import_default_filters() {
+    public function import_default_filters($category = null) {
         $fm = new admin_filter_manager($this->db);
-        $this->import_filters($fm->get_all_filters());
+        $filters = $category !== null ? $fm->get_filters($category) : $fm->get_all_filters();
+        $this->import_filters($filters);
+        $this->invalidate_filters_cache($category);
     }
 
     /**
      * Invalidate the filters cache.
      *
+     * @param int|null $category The category to invalidate for.
      * @return void
      */
     public function invalidate_filters_cache($category = \block_xp_filter::CATEGORY_EVENTS) {
@@ -220,13 +256,20 @@ class course_filter_manager {
     /**
      * Removes all filters.
      *
+     * @param int|null $category The category of filters to remove.
      * @return void
      */
-    public function purge() {
-        $this->db->delete_records('block_xp_filters', ['courseid' => $this->courseid]);
-        // Ideally we shouldn't be clearing all courses' cache, but that is the simplest way
-        // to ensure that all the categories of filters are invalidated within this course.
-        $this->cache->purge();
+    public function purge($category = null) {
+        if ($category === null) {
+            $this->db->delete_records('block_xp_filters', ['courseid' => $this->courseid]);
+            // Ideally we shouldn't be clearing all courses' cache, but that is the simplest way
+            // to ensure that all the categories of filters are invalidated within this course.
+            $this->cache->purge();
+            return;
+        }
+
+        $this->db->delete_records('block_xp_filters', ['courseid' => $this->courseid, 'category' => $category]);
+        $this->invalidate_filters_cache($category);
     }
 
 }

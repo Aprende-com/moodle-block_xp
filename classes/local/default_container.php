@@ -44,14 +44,18 @@ class default_container implements container {
         'ajax_base_url' => true,
         'ajax_router' => true,
         'ajax_url_resolver' => true,
-        'base_url' => true,
+        'backup_content_manager' => true,
+        'badge_manager' => true,
         'badge_url_resolver' => true,
+        'badge_url_resolver_course_world_factory' => true,
+        'base_url' => true,
         'block_class' => true,
         'block_edit_form_class' => true,
         'collection_logger' => true,
         'collection_strategy' => true,
         'config' => true,
         'config_locked' => true,
+        'context_world_factory' => true,
         'course_world_block_any_instance_finder_in_context' => true,
         'course_world_block_instance_finder' => true,
         'course_world_block_instances_finder_in_context' => true,
@@ -61,10 +65,16 @@ class default_container implements container {
         'course_world_navigation_factory' => true,
         'db' => true,
         'file_server' => true,
+        'levels_info_factory' => true,
+        'levels_info_writer' => true,
         'observer_rules_maker' => true,
         'renderer' => true,
         'router' => true,
+        'rule_dictator' => true,
         'rule_event_lister' => true,
+        'rule_filter_handler' => true,
+        'rule_type_resolver' => true,
+        'serializer_factory' => true,
         'settings_maker' => true,
         'shortcodes_definition_maker' => true,
         'tasks_definition_maker' => true,
@@ -145,12 +155,41 @@ class default_container implements container {
     }
 
     /**
+     * Get the content manager.
+     *
+     * @return backup\content_manager
+     */
+    protected function get_backup_content_manager() {
+        return new backup\content_manager();
+    }
+
+    /**
+     * Get the badge manager.
+     *
+     * @return badge\badge_manager
+     */
+    protected function get_badge_manager() {
+        return new badge\badge_manager($this->get('db'));
+    }
+
+    /**
      * Get the default badge URL resolver.
      *
-     * @return moodle_url
+     * @return xp\badge_url_resolver
      */
     protected function get_badge_url_resolver() {
         return new \block_xp\local\xp\file_storage_badge_url_resolver(\context_system::instance(), 'block_xp', 'defaultbadges', 0);
+    }
+
+    /**
+     * Get the badge URL resolver factory.
+     *
+     * @return factory\badge_url_resolver_course_world_factory
+     */
+    protected function get_badge_url_resolver_course_world_factory() {
+        return new \block_xp\local\factory\default_badge_url_resolver_course_world_factory(
+            $this->get('badge_url_resolver')
+        );
     }
 
     /**
@@ -219,8 +258,19 @@ class default_container implements container {
      */
     protected function get_config_locked() {
         return new \block_xp\local\config\mdl_locked_config('block_xp', [
-            'identitymode'
+            'identitymode',
         ]);
+    }
+
+    /**
+     * Context world factory.
+     *
+     * @return factory\context_world_factory
+     */
+    protected function get_context_world_factory() {
+        $factory = new factory\default_context_world_factory($this->get('config'));
+        $factory->set_course_world_factory($this->get('course_world_factory'));
+        return $factory;
     }
 
     /**
@@ -261,10 +311,9 @@ class default_container implements container {
         return new \block_xp\local\factory\default_course_world_factory(
             $this->get('config'),
             $this->get('db'),
-            new \block_xp\local\factory\default_badge_url_resolver_course_world_factory(
-                $this->get('badge_url_resolver')
-            ),
-            $this->get('config_locked')
+            $this->get('badge_url_resolver_course_world_factory'),
+            $this->get('config_locked'),
+            $this->get('levels_info_factory')
         );
     }
 
@@ -311,11 +360,29 @@ class default_container implements container {
     /**
      * Get the file server.
      *
-     * @return file_server
+     * @return file\file_server
      */
     protected function get_file_server() {
-        global $CFG;
-        return new \block_xp\local\file\file_server(get_file_storage(), $this->get('config')->get('context'));
+        return new file\file_server(get_file_storage(), $this->get('config')->get('context'));
+    }
+
+    /**
+     * Get the levels info factory.
+     *
+     * @return factory\levels_info_factory
+     */
+    protected function get_levels_info_factory() {
+        return new factory\levels_factory($this->get('config'), $this->get('badge_url_resolver'),
+            $this->get('badge_url_resolver_course_world_factory'));
+    }
+
+    /**
+     * Get the levels info writer.
+     *
+     * @return xp\levels_info_writer
+     */
+    protected function get_levels_info_writer() {
+        return new xp\levels_info_writer($this->get('config'));
     }
 
     /**
@@ -365,12 +432,48 @@ class default_container implements container {
     }
 
     /**
+     * Get the rule dictator.
+     *
+     * @return rule\dictator
+     */
+    protected function get_rule_dictator() {
+        return new rule\the_dictator($this->get('db'), $this->get('rule_filter_handler'));
+    }
+
+    /**
      * Get the rule event lister.
      *
      * @return event_lister
      */
     protected function get_rule_event_lister() {
         return new \block_xp\local\rule\event_lister($this->get('config'));
+    }
+
+    /**
+     * Get the rule filter handler.
+     *
+     * @return rulefilter\handler
+     */
+    protected function get_rule_filter_handler() {
+        return new rulefilter\default_handler();
+    }
+
+    /**
+     * Get the rule type resolver.
+     *
+     * @return ruletype\resolver
+     */
+    protected function get_rule_type_resolver() {
+        return new ruletype\default_resolver();
+    }
+
+    /**
+     * Get the serializer factory.
+     *
+     * @return factory\serializer_factory
+     */
+    protected function get_serializer_factory() {
+        return new factory\serializer_factory();
     }
 
     /**

@@ -30,6 +30,7 @@ require_once(__DIR__ . '/itemspertime.php');
 require_once(__DIR__ . '/duration.php');
 
 use block_xp\local\config\course_world_config;
+use html_writer;
 use moodleform;
 use moodle_url;
 
@@ -65,37 +66,64 @@ class config extends moodleform {
         $mform->addElement('selectyesno', 'enableinfos', get_string('enableinfos', 'block_xp'));
         $mform->addHelpButton('enableinfos', 'enableinfos', 'block_xp');
 
-        $mform->addElement('selectyesno', 'enablelevelupnotif', get_string('enablelevelupnotif', 'block_xp'));
-        $mform->addHelpButton('enablelevelupnotif', 'enablelevelupnotif', 'block_xp');
+        $levelupnotifelements = [$mform->createElement('selectyesno', 'enablelevelupnotif', '')];
+        if ($world) {
+            $randomtrymeid = html_writer::random_id();
+            $level1 = $world->get_levels_info()->get_level(1);
+            $level2 = $world->get_levels_info()->get_level(2);
+            $trymedatascript = $renderer->json_script([
+                'courseid' => $world->get_courseid(),
+                'levelnum' => $level2->get_level(),
+                'levelbadge' => $renderer->level_badge($level2),
+                'prevlevelbadge' => $renderer->level_badge($level1),
+            ], $randomtrymeid . 'data');
+            $levelupnotifelements[] = $mform->createElement('static', 'levelupnotifunit', '', html_writer::div(
+                html_writer::tag('a', get_string('tryme', 'block_xp'), [
+                    'href' => '#',
+                    'id' => $randomtrymeid,
+                    'role' => 'button',
+                    'class' => 'xp-text-xs',
+                ]) . $trymedatascript
+            ));
+            $PAGE->requires->js_amd_inline(<<<EOT
+                require(['block_xp/popup-notification', 'block_xp/role-button'], (PopupModule, RoleButton) => {
+                    RoleButton.registerClick('#$randomtrymeid', () => {
+                        PopupModule.show(JSON.parse(document.getElementById('{$randomtrymeid}data').textContent));
+                    });
+                });
+            EOT);
+        }
+        $mform->addGroup($levelupnotifelements, 'enablelevelupnotifgrp', get_string('enablelevelupnotif', 'block_xp'), null, false);
+        $mform->addHelpButton('enablelevelupnotifgrp', 'enablelevelupnotif', 'block_xp');
 
         $mform->addElement('header', 'hdrladder', get_string('ladder', 'block_xp'));
 
         $mform->addElement('selectyesno', 'enableladder', get_string('enableladder', 'block_xp'));
         $mform->addHelpButton('enableladder', 'enableladder', 'block_xp');
 
-        $mform->addElement('select', 'identitymode', get_string('anonymity', 'block_xp'), array(
+        $mform->addElement('select', 'identitymode', get_string('anonymity', 'block_xp'), [
             course_world_config::IDENTITY_OFF => get_string('hideparticipantsidentity', 'block_xp'),
             course_world_config::IDENTITY_ON => get_string('displayparticipantsidentity', 'block_xp'),
-        ));
+        ]);
         $mform->addHelpButton('identitymode', 'anonymity', 'block_xp');
         $mform->disabledIf('identitymode', 'enableladder', 'eq', 0);
 
-        $mform->addElement('select', 'neighbours', get_string('limitparticipants', 'block_xp'), array(
+        $mform->addElement('select', 'neighbours', get_string('limitparticipants', 'block_xp'), [
             0 => get_string('displayeveryone', 'block_xp'),
             1 => get_string('displayoneneigbour', 'block_xp'),
             2 => get_string('displaynneighbours', 'block_xp', '2'),
             3 => get_string('displaynneighbours', 'block_xp', '3'),
             4 => get_string('displaynneighbours', 'block_xp', '4'),
             5 => get_string('displaynneighbours', 'block_xp', '5'),
-        ));
+        ]);
         $mform->addHelpButton('neighbours', 'limitparticipants', 'block_xp');
         $mform->disabledIf('neighbours', 'enableladder', 'eq', 0);
 
-        $mform->addElement('select', 'rankmode', get_string('ranking', 'block_xp'), array(
+        $mform->addElement('select', 'rankmode', get_string('ranking', 'block_xp'), [
             course_world_config::RANK_OFF => get_string('hiderank', 'block_xp'),
             course_world_config::RANK_ON => get_string('displayrank', 'block_xp'),
             course_world_config::RANK_REL => get_string('displayrelativerank', 'block_xp'),
-        ));
+        ]);
         $mform->addHelpButton('rankmode', 'ranking', 'block_xp');
         $mform->disabledIf('rankmode', 'enableladder', 'eq', 0);
 
@@ -116,7 +144,7 @@ class config extends moodleform {
 
         $mform->addElement('block_xp_form_itemspertime', 'maxactionspertime', get_string('maxactionspertime', 'block_xp'), [
             'maxunit' => 60,
-            'itemlabel' => get_string('actions', 'block_xp')
+            'itemlabel' => get_string('actions', 'block_xp'),
         ]);
         $mform->addHelpButton('maxactionspertime', 'maxactionspertime', 'block_xp');
         $mform->disabledIf('maxactionspertime', 'enablecheatguard', 'eq', 0);
@@ -243,7 +271,7 @@ class config extends moodleform {
     /**
      * Set the data.
      *
-     * @param mixed $name The data.
+     * @param mixed $data The data.
      */
     public function set_data($data) {
         $data = (array) $data;
@@ -255,7 +283,7 @@ class config extends moodleform {
         if (isset($data['maxactionspertime']) && isset($data['timeformaxactions'])) {
             $data['maxactionspertime'] = [
                 'points' => (int) $data['maxactionspertime'],
-                'time' => (int) $data['timeformaxactions']
+                'time' => (int) $data['timeformaxactions'],
             ];
             unset($data['timeformaxactions']);
         }

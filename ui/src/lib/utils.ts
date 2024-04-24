@@ -1,3 +1,5 @@
+export const classNames = (...args: any[]) => args.filter(Boolean).join(" ");
+
 export const fifoCache = <T>(maxItems = 128): { get: (k: string) => T | undefined; set: (k: string, v: T) => void } => {
   let items: { [index: string]: any } = {};
   let keys: string[] = [];
@@ -24,8 +26,24 @@ export const fifoCache = <T>(maxItems = 128): { get: (k: string) => T | undefine
   };
 };
 
-export const stripTags = (html: string) => {
-  var tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
+let uniqueId = 0;
+export const getUniqueId = () => {
+  return `xp-${Date.now()}-${uniqueId++}`;
 };
+
+export const stripTags = (html: string) => {
+  var tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+};
+
+const escapeCharMap: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#039;'
+};
+export const escapeHtml = (text: string) => {
+  return text.replace(/[&<>"']/g, function(m) { return escapeCharMap[m]; });
+}

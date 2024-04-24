@@ -37,10 +37,14 @@ use moodle_exception;
  */
 class ladder_controller extends page_controller {
 
+    /** Page size flag. */
     const PAGE_SIZE_FLAG = 'ladder-pagesize';
 
+    /** @var bool */
     protected $requiremanage = false;
+    /** @var bool */
     protected $supportsgroups = true;
+    /** @var string */
     protected $routename = 'ladder';
 
     protected function permissions_checks() {
@@ -63,7 +67,7 @@ class ladder_controller extends page_controller {
      */
     protected function define_optional_params() {
         return [
-            ['pagesize', 0, PARAM_INT, false]
+            ['pagesize', 0, PARAM_INT, false],
         ];
     }
 

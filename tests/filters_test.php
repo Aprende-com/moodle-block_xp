@@ -43,50 +43,56 @@ use block_xp_ruleset;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \block_xp\local\xp\course_filter_manager
  */
-class filters_test extends base_testcase {
+final class filters_test extends base_testcase {
 
+    /**
+     * Get the filter manager.
+     *
+     * @param int $courseid The course ID.
+     * @return local\xp\course_filter_manager
+     */
     protected function get_filter_manager($courseid) {
         $world = $this->get_world($courseid);
         $world->get_config()->set('defaultfilters', course_world_config::DEFAULT_FILTERS_STATIC);
         return $world->get_filter_manager();
     }
 
-    public function test_filter_match() {
+    public function test_filter_match(): void {
         $rule = new block_xp_rule_property(block_xp_rule_base::EQ, 'c', 'crud');
-        $filter = block_xp_filter::load_from_data(array('rule' => $rule));
+        $filter = block_xp_filter::load_from_data(['rule' => $rule]);
 
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c']);
         $this->assertTrue($filter->match($e));
 
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'd'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'd']);
         $this->assertFalse($filter->match($e));
     }
 
-    public function test_filter_load_rule() {
+    public function test_filter_load_rule(): void {
         $rulec = new block_xp_rule_property(block_xp_rule_base::EQ, 'c', 'crud');
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c']);
 
-        $filter = block_xp_filter::load_from_data(array('rule' => $rulec));
+        $filter = block_xp_filter::load_from_data(['rule' => $rulec]);
         $this->assertTrue($filter->match($e));
 
-        $filter = block_xp_filter::load_from_data(array('ruledata' => json_encode($rulec->export())));
+        $filter = block_xp_filter::load_from_data(['ruledata' => json_encode($rulec->export())]);
         $this->assertTrue($filter->match($e));
 
-        $filter = block_xp_filter::load_from_data(array());
+        $filter = block_xp_filter::load_from_data([]);
         $filter->set_rule($rulec);
         $this->assertTrue($filter->match($e));
     }
 
-    public function test_standard_filters() {
+    public function test_standard_filters(): void {
         $this->resetAfterTest(true);
 
         $course = $this->getDataGenerator()->create_course();
         $fm = $this->get_filter_manager($course->id);
 
-        $c = \block_xp\event\something_happened::mock(array('crud' => 'c'));
-        $r = \block_xp\event\something_happened::mock(array('crud' => 'r'));
-        $u = \block_xp\event\something_happened::mock(array('crud' => 'u'));
-        $d = \block_xp\event\something_happened::mock(array('crud' => 'd'));
+        $c = \block_xp\event\something_happened::mock(['crud' => 'c']);
+        $r = \block_xp\event\something_happened::mock(['crud' => 'r']);
+        $u = \block_xp\event\something_happened::mock(['crud' => 'u']);
+        $d = \block_xp\event\something_happened::mock(['crud' => 'd']);
 
         $this->assertSame(45, $fm->get_points_for_event($c));
         $this->assertSame(9, $fm->get_points_for_event($r));
@@ -94,7 +100,7 @@ class filters_test extends base_testcase {
         $this->assertSame(0, $fm->get_points_for_event($d));
     }
 
-    public function test_custom_filters() {
+    public function test_custom_filters(): void {
         $this->resetAfterTest(true);
 
         $course = $this->getDataGenerator()->create_course();
@@ -102,78 +108,78 @@ class filters_test extends base_testcase {
 
         // Define some custom rules, the sortorder and IDs are mixed here.
         $rule = new block_xp_rule_property(block_xp_rule_base::EQ, 'c', 'crud');
-        $data = array('courseid' => $course->id, 'sortorder' => -20, 'points' => 100, 'rule' => $rule);
+        $data = ['courseid' => $course->id, 'sortorder' => -20, 'points' => 100, 'rule' => $rule];
         block_xp_filter::load_from_data($data)->save();
         $fm->invalidate_filters_cache();
 
-        $rule = new block_xp_ruleset(array(
+        $rule = new block_xp_ruleset([
             new block_xp_rule_property(block_xp_rule_base::EQ, 2, 'objectid'),
             new block_xp_rule_property(block_xp_rule_base::EQ, 'u', 'crud'),
-        ), block_xp_ruleset::ANY);
-        $data = array('courseid' => $course->id, 'sortorder' => -10, 'points' => 120, 'rule' => $rule);
+        ], block_xp_ruleset::ANY);
+        $data = ['courseid' => $course->id, 'sortorder' => -10, 'points' => 120, 'rule' => $rule];
         block_xp_filter::load_from_data($data)->save();
 
-        $rule = new block_xp_ruleset(array(
+        $rule = new block_xp_ruleset([
             new block_xp_rule_property(block_xp_rule_base::GTE, 100, 'objectid'),
             new block_xp_rule_property(block_xp_rule_base::EQ, 'r', 'crud'),
-        ), block_xp_ruleset::ALL);
-        $data = array('courseid' => $course->id, 'sortorder' => -30, 'points' => 130, 'rule' => $rule);
+        ], block_xp_ruleset::ALL);
+        $data = ['courseid' => $course->id, 'sortorder' => -30, 'points' => 130, 'rule' => $rule];
         block_xp_filter::load_from_data($data)->save();
         $fm->invalidate_filters_cache();
 
         // We can override default filters.
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'c', 'objectid' => 2));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'c', 'objectid' => 2]);
         $this->assertSame(100, $fm->get_points_for_event($e));
 
         // We can still fallback on default filters.
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'd'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'd']);
         $this->assertSame(0, $fm->get_points_for_event($e));
 
         // Sort order is respected.
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'u', 'objectid' => 2));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'u', 'objectid' => 2]);
         $this->assertSame(120, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'r'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'r']);
         $this->assertSame(9, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'r', 'objectid' => 100));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'r', 'objectid' => 100]);
         $this->assertSame(130, $fm->get_points_for_event($e));
 
         // This filter will catch everything before the default rules.
         $rule = new block_xp_rule_property(block_xp_rule_base::CT, 'something', 'eventname');
-        $data = array('courseid' => $course->id, 'sortorder' => -5, 'points' => 110, 'rule' => $rule);
+        $data = ['courseid' => $course->id, 'sortorder' => -5, 'points' => 110, 'rule' => $rule];
         block_xp_filter::load_from_data($data)->save();
         $fm->invalidate_filters_cache();
 
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'd'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'd']);
         $this->assertSame(110, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'r'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'r']);
         $this->assertSame(110, $fm->get_points_for_event($e));
 
         // This filter will catch everything.
         $rule = new block_xp_rule_property(block_xp_rule_base::CT, 'something', 'eventname');
-        $data = array('courseid' => $course->id, 'sortorder' => -999, 'points' => 1, 'rule' => $rule);
+        $data = ['courseid' => $course->id, 'sortorder' => -999, 'points' => 1, 'rule' => $rule];
         block_xp_filter::load_from_data($data)->save();
         $fm->invalidate_filters_cache();
 
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'u', 'objectid' => 2));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'u', 'objectid' => 2]);
         $this->assertSame(1, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'r', 'objectid' => 100));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'r', 'objectid' => 100]);
         $this->assertSame(1, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'd'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'd']);
         $this->assertSame(1, $fm->get_points_for_event($e));
-        $e = \block_xp\event\something_happened::mock(array('crud' => 'r'));
+        $e = \block_xp\event\something_happened::mock(['crud' => 'r']);
         $this->assertSame(1, $fm->get_points_for_event($e));
 
     }
 
-    public function test_validate_data() {
+    public function test_validate_data(): void {
         $this->assertTrue(block_xp_filter::validate_data([]));
 
         // Rule data.
         $this->assertTrue(block_xp_filter::validate_data([
-            'ruledata' => json_encode(['_class' => 'block_xp_rule_property'])
+            'ruledata' => json_encode(['_class' => 'block_xp_rule_property']),
         ]));
         $this->assertFalse(block_xp_filter::validate_data([
-            'ruledata' => json_encode(['_class' => 'core_user'])
+            'ruledata' => json_encode(['_class' => 'core_user']),
         ]));
 
         // IDs where loose empty values are OK.
@@ -207,9 +213,9 @@ class filters_test extends base_testcase {
         $this->assertTrue(block_xp_filter::validate_data(['category' => (string) block_xp_filter::CATEGORY_GRADES]));
     }
 
-    public function test_load_from_data() {
+    public function test_load_from_data(): void {
         $filter = block_xp_filter::load_from_data((object) [
-            'ruledata' => json_encode(['_class' => 'block_xp_rule_property'])
+            'ruledata' => json_encode(['_class' => 'block_xp_rule_property']),
         ]);
         $this->assertInstanceOf('block_xp_rule_property', $filter->get_rule());
 
